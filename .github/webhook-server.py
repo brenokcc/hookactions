@@ -36,7 +36,7 @@ def execute(cmd, file_name):
 def comment(url, text):
     print(text)
     if url:
-        headers={'Authorization': 'Bearer {}'.format(os.environ['TAVOS_API_TOKEN'])}
+        headers={'Authorization': 'Bearer {}'.format(os.environ['GITHUB_API_TOKEN'])}
         payload = {"body":text}
         response = requests.post(url, json=payload, headers=headers)
         print(response.json())
