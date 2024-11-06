@@ -24,7 +24,7 @@ Simulate a merge
 
 print(sys.argv)
 PORT = sys.argv[1]
-DOMAIN = sys.argv[2]
+URL = sys.argv[2]
 TOKEN = sys.argv[3]
 
 def stop(*args):
@@ -87,7 +87,7 @@ def pop():
 def process(data):
     message = ''
     task_name = uuid.uuid1().hex
-    log_file_url = 'http://{}/{}'.format(DOMAIN, task_name)
+    log_file_url = '{}/{}'.format(URL, task_name)
     pull_request = data.get('pull_request')
     if pull_request:
         action = data.get('action')
