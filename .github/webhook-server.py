@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import uuid
 import time
 import json
@@ -12,7 +13,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 """
 Run the server:
-   ./.github/webhook-server.py
+   ./.github/webhook-server.py <port> <url> <token>
 
 Simulate a pull request:
     curl -X POST http://127.0.0.1:9999 -d '{"action": "opened", "pull_request": {"comments_url": null, "base": {"ref": "main"}, "head": {"ref": "main"}}}'
@@ -21,7 +22,10 @@ Simulate a merge
     curl -X POST http://127.0.0.1:9999 -d '{"action": "closed", "pull_request": {"comments_url": null, "merged": true, "base": {"ref": "main"}, "head": {"ref": "main"}}}'
 """
 
-PORT = 9999
+print(sys.argv)
+PORT = sys.argv[1]
+URL = sys.argv[2]
+TOKEN = sys.argv[3]
 
 def stop(*args):
     print('Bye!')
@@ -36,7 +40,7 @@ def execute(cmd, file_name):
 def comment(url, text):
     print(text)
     if url:
-        headers={'Authorization': 'Bearer {}'.format(os.environ['TAVOS_API_TOKEN'])}
+        headers={'Authorization': 'Bearer {}'.format(TOKEN)}
         payload = {"body":text}
         response = requests.post(url, json=payload, headers=headers)
         print(response.json())
@@ -80,10 +84,10 @@ def pop():
         queue(data)
         return item
 
-def process(host_name, data):
+def process(data):
     message = ''
     task_name = uuid.uuid1().hex
-    log_file_url = 'http://{}/{}'.format(host_name, task_name)
+    log_file_url = '{}/{}'.format(URL, task_name)
     pull_request = data.get('pull_request')
     if pull_request:
         action = data.get('action')
@@ -125,7 +129,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         data = json.loads(self.rfile.read(int(self.headers.get('Content-Length'))).decode())
         print(data)
-        message = process(self.headers['Host'], data)
+        message = process(data)
         with open(os.path.join('logs', 'server.log'), 'a') as file:
             file.write('<<< {}\n\n'.format(data))
             file.write('>>> {}\n\n'.format(message))
@@ -133,7 +137,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 os.makedirs(os.path.join('logs', 'tasks'), exist_ok=True)
 signal.signal(signal.SIGTERM, stop)
-httpd = HTTPServer(('127.0.0.1', PORT), SimpleHTTPRequestHandler)
+httpd = HTTPServer(('127.0.0.1', int(PORT)), SimpleHTTPRequestHandler)
 try:
     print('Listening 127.0.0.1:{} ...'.format(PORT))
     threading.Thread(target=dequeue).start()
