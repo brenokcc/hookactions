@@ -96,11 +96,11 @@ def process(data):
         base_branch = data.get('pull_request').get('base').get('ref')
         head_branch = data.get('pull_request').get('head').get('ref')
         if action in ('opened', 'synchronize', 'edited'):
-            push(f"echo {head_branch}", task_name, comments_url)
+            push(f"./test {head_branch}", task_name, comments_url)
             message = 'Task was queued to test branch "{}". {}'.format(head_branch, log_file_url)
             comment(comments_url, message)
         elif action == 'closed' and merged:
-            push(f"docker-compose up -d --build", task_name, comments_url)
+            push(f"./start {head_branch}", task_name, comments_url)
             message = 'Task was queued to update branch "{}" after merge with "{}". {}'.format(base_branch, head_branch, log_file_url)
             comment(comments_url, message)
     return message
